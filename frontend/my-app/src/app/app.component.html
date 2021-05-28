@@ -1,0 +1,92 @@
+<div class="container-fluid">
+  <div id="headline" class="row">
+    <div class="col-sm"><h1>{{title}}</h1></div>
+  </div>
+
+  <div class="row">
+    <!-- Left (navigation) column -->
+    <div class="col-sm-2">
+
+      <!-- Tab group on the left. Showing "all", "tracks"-->
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="navAllActive"  [attr.aria-label]="navAllAriaCurrent" href="#" (click)="onNavClick('all')">All</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="navTracksActive" [attr.aria-label]="navTracksAriaCurrent"
+            href="#" (click)="[onNavClick('tracks'), onClickReloadTracks()]">Tracks</a>
+        </li>
+      </ul>
+
+      <div *ngIf="showTracksLoadingSpinner">
+        <div id="tracksLoadingSpinner" class="d-flex justify-content-center">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- show all the tracks as a list here -->
+      <div *ngIf="navTracksActive">
+        <ul class="list-group" id="tracklist">
+          <li class="list-group-item"
+            *ngFor="let track of shownTracks"
+            [class.active]="track === selectedTrack"
+            (click)="onSelect(track)">
+            {{track.name}}
+          </li>
+        </ul>
+
+        <!-- the (re)load button -->
+        <button id="loadButton" type="button" class="btn btn-primary"
+        [class.disabled]="disableLoadButton"
+        (click)="onClickReloadTracks()"
+      >(Re)Load</button>
+      </div>
+
+    </div>
+
+    <!-- Main Content with Map etc here! -->
+    <div class="col-sm-10">
+      <div *ngIf="selectedTrack">
+        <h2>{{selectedTrack.name | uppercase}} Details</h2>
+        <div>id:{{selectedTrack.id}}</div>
+      </div>
+      <div id="mapid"></div>
+
+      <div *ngIf="selectedTrack" id="trackStats">
+        <span id="distance">Distanz: {{trackdata.length/1000|number:'1.0-2':'de-DE'}}&thinsp;km</span>
+        <span id="height">Höhe (min/max/delta)&thinsp;m:
+           {{trackdata.heightMin|number:'1.0-1':'de-DE'}} /
+           {{trackdata.heightMax|number:'1.0-1':'de-DE'}} /
+           {{trackdata.heightMax - trackdata.heightMin|number:'1.0-1':'de-DE'}}</span>
+        <span id="velocity">Geschwindigkeit (min/max/avg)&thinsp;km/h:
+          {{trackdata.vMin|number:'1.0-1':'de-DE'}} /
+          {{trackdata.vMax|number:'1.0-1':'de-DE'}} /
+          {{trackdata.vAvg|number:'1.0-1':'de-DE'}}</span>
+        <br>
+        <span id="traveltime">Zeit (total / in Bewegung):
+          {{trackdata.timeTotal|date:'h:mm'}}&thinsp;h /
+          {{trackdata.timeMoving|date:'h:mm'}}&thinsp;h</span>
+        <span id="heightDelta">Auf-/Abstieg:
+          {{trackdata.elevationUp|number:'1.0-0':'de-DE'}}&thinsp;m /
+          {{trackdata.elevationDown|number:'1.0-0':'de-DE'}}&thinsp;m</span>
+        <span id="ascent">Steigung (min/max/avg):
+          {{trackdata.ascentMin|number:'1.0-0':'de-DE'}}% /
+          {{trackdata.ascentMax|number:'1.0-0':'de-DE'}}% /
+          {{trackdata.ascentAvg|number:'1.0-0':'de-DE'}}%</span>
+      </div>
+
+      <div *ngIf="selectedTrack">
+        <highcharts-chart
+          *ngIf="selectedTrack"
+          [Highcharts]="highcharts"
+          [options]="chartOptions"
+          [(update)]="chartUpdateFlag"
+        ></highcharts-chart>
+      </div>
+    </div>
+  </div>
+</div>
+
+
