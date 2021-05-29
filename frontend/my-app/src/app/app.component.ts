@@ -40,6 +40,7 @@ export class AppComponent /*implements OnInit*/ { // TODO load tracks to List
   map: any;
   mapMarkers: any = [];
   mapHighchartsMarker: any;
+  cssMapHeightValue = "600px";
 
   // navigation
   navAllAriaCurrent = '';
@@ -136,12 +137,14 @@ export class AppComponent /*implements OnInit*/ { // TODO load tracks to List
   onNavClick(item: string): void {
     console.log('click ' + item);
     // set nav bar class and aria correctly
-    this.navAllAriaCurrent    = (item === 'all')     ? 'page' : '';
-    this.navTracksAriaCurrent =  (item === 'tracks') ? 'page' : '';
-    this.navAllActive    = (item === 'all');
-    this.navTracksActive = (item === 'tracks');
+    this.navAllAriaCurrent    = (item === 'all')    ? 'page' : '';
+    this.navAllActive         = (item === 'all');
+    this.navTracksAriaCurrent = (item === 'tracks') ? 'page' : '';
+    this.navTracksActive      = (item === 'tracks');
+    // adjust Map Height
+    this.cssMapHeightValue    = (item === 'all')    ? '90vh' : '600px';
 
-    // Todo: these 2 should/could reside inone data structure?
+    // Todo: these 2 should/could reside in one data structure?
     this.selectedTrack = undefined;
     this.flatTrackLocations = [];
 
@@ -151,6 +154,7 @@ export class AppComponent /*implements OnInit*/ { // TODO load tracks to List
     if (item === 'all'){
       this.loadAllTracksToMap();
     }
+
   }
 
   loadAllTracksToMap(): void {

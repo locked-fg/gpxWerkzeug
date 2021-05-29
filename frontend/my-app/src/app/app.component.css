@@ -1,6 +1,6 @@
 #tracklist {
   padding: 0;
-  height:450px;
+  height: 90vh;
   overflow-y: scroll;
 }
 
@@ -12,7 +12,7 @@
 
 #mapid {
   min-width: 310px;
-  height: 600px;
+/*  height: 600px;*/
   margin: 0 auto;
   resize: vertical;
 }

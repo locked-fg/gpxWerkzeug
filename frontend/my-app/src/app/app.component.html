@@ -51,7 +51,8 @@
       <div *ngIf="selectedTrack">
         <h2>{{selectedTrack.name | uppercase}} Details</h2>
       </div>
-      <div id="mapid"></div>
+
+      <div id="mapid" style="height:300px;" [style.height]="cssMapHeightValue"></div>
 
       <div *ngIf="selectedTrack" id="trackStats">
         <span id="distance">Distanz: {{trackdata.length/1000|number:'1.0-2':'de-DE'}}&thinsp;km</span>
