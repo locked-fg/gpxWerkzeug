@@ -30,12 +30,11 @@ import static java.util.stream.Collectors.toList;
 @CrossOrigin(origins = "http://localhost:4200")
 public class GpxWerkzeugBackend implements ApplicationRunner {
     // TODO move to some config
-    private static final String[] SRC_DIRS = new String[]{
+    private List<String> gpxSrcDir = List.of(
             "C://Users/info_000/Pictures/DigiCam Raw/",
             "C://Users/info_000/Pictures/GPS/",
             "F://info_000/Pictures/DigiCam Raw/",
-            "Z://Onedrive-Backup-sync/encrypted/DigiCam Raw/"
-    };
+            "Z://Onedrive-Backup-sync/encrypted/DigiCam Raw/");
     private static final int MIN_METERS_FOR_MOVEMENT = 10;
     private static final int MAX_DIST_METERS_BEFORE_SPLIT = 1000;
 
@@ -58,15 +57,17 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
      */
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        LOG.info("searching GPX Tracks");
-
-        LOG.trace("A TRACE Message");
-        LOG.debug("A DEBUG Message");
-        LOG.info("An INFO Message");
-        LOG.warn("A WARN Message");
-        LOG.error("An ERROR Message");
-
-        gpxPaths = GpxScanner.getGpxPaths(SRC_DIRS).collect(toList());
+        LOG.info("init SpringBoot");
+        List<String> gpxSrc = args.getOptionValues("gpxSrc");
+        if (!gpxSrc.isEmpty()){
+            gpxSrcDir = gpxSrc;
+        }
+//        LOG.trace("A TRACE Message");
+//        LOG.debug("A DEBUG Message");
+//        LOG.info("An INFO Message");
+//        LOG.warn("A WARN Message");
+//        LOG.error("An ERROR Message");
+        gpxPaths = GpxScanner.getGpxPaths(gpxSrcDir).collect(toList());
     }
 
     @GetMapping("/hello")

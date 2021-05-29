@@ -1,5 +1,7 @@
 #tracklist {
   padding: 0;
+  height:450px;
+  overflow-y: scroll;
 }
 
 #tracklist li {

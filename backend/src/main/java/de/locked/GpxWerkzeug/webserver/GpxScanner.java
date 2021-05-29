@@ -9,13 +9,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 public class GpxScanner {
     private static final Logger LOG = LogManager.getLogger(GpxScanner.class.getName());
 
-    Stream<Gpx> init(String[] dirs) throws IOException {
+    Stream<Gpx> init(List<String> dirs) throws IOException {
         LOG.info("start scanning fpr GPX traces");
         var start = System.currentTimeMillis();
 
@@ -38,13 +39,13 @@ public class GpxScanner {
             LOG.debug("scanning directory: " + v);
             return Files.walk(Paths.get(v));
         } catch (IOException e) {
-            LOG.error("Unable to scan: "+v, e);
+            LOG.error("Unable to scan: " + v, e);
             return Stream.empty();
         }
     }
 
-    public static Stream<Path> getGpxPaths(String... paths) throws IOException {
-        Stream<Path> gpxStream = Stream.of(paths)
+    public static Stream<Path> getGpxPaths(List<String> paths) throws IOException {
+        Stream<Path> gpxStream = paths.stream()
                 .parallel()
                 .flatMap(GpxScanner::filesWalk)
                 .filter(p -> p.toString().endsWith(".gpx"));
