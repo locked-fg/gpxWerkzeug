@@ -1,11 +1,11 @@
-<div class="container-fluid">
-  <div id="headline" class="row">
+<div id="main-container" class="container-fluid">
+  <div id="container-header" class="row">
     <div class="col-sm"><h1>{{title}}</h1></div>
   </div>
 
-  <div class="row">
+  <div  id="container-body" class="row">
     <!-- Left (navigation) column -->
-    <div class="col-sm-2">
+    <div id="container-track-col" class="col-sm-2">
 
       <!-- Tab group on the left. Showing "all", "tracks"-->
       <ul class="nav nav-tabs">
@@ -27,7 +27,7 @@
       </div>
 
       <!-- show all the tracks as a list here -->
-      <div *ngIf="navTracksActive">
+      <div *ngIf="navTracksActive" id="container-tracklist">
         <ul class="list-group" id="tracklist">
           <li class="list-group-item"
             *ngFor="let track of shownTracks"
@@ -47,12 +47,12 @@
     </div>
 
     <!-- Main Content with Map etc here! -->
-    <div class="col-sm-10">
+    <div id="container-map" class="col-sm-10">
       <div *ngIf="selectedTrack">
-        <h2>{{selectedTrack.name | uppercase}} Details</h2>
+        <h2 id="track-title">{{selectedTrack.name | uppercase}} Details</h2>
       </div>
 
-      <div id="mapid" style="height:300px;" [style.height]="cssMapHeightValue"></div>
+      <div id="mapid"></div>
 
       <div *ngIf="selectedTrack" id="trackStats">
         <span id="distance">Distanz: {{trackdata.length/1000|number:'1.0-2':'de-DE'}}&thinsp;km</span>
@@ -86,6 +86,9 @@
         ></highcharts-chart>
       </div>
     </div>
+  </div>
+
+  <div id="container-footer" class="row">
   </div>
 </div>
 

@@ -40,7 +40,7 @@ export class AppComponent /*implements OnInit*/ { // TODO load tracks to List
   map: any;
   mapMarkers: any = [];
   mapHighchartsMarker: any;
-  cssMapHeightValue = "600px";
+//  cssMapHeightValue = "600px";
 
   // navigation
   navAllAriaCurrent = '';
@@ -142,7 +142,7 @@ export class AppComponent /*implements OnInit*/ { // TODO load tracks to List
     this.navTracksAriaCurrent = (item === 'tracks') ? 'page' : '';
     this.navTracksActive      = (item === 'tracks');
     // adjust Map Height
-    this.cssMapHeightValue    = (item === 'all')    ? '90vh' : '600px';
+//    this.cssMapHeightValue    = (item === 'all')    ? '90vh' : '600px';
 
     // Todo: these 2 should/could reside in one data structure?
     this.selectedTrack = undefined;
@@ -325,7 +325,8 @@ export class AppComponent /*implements OnInit*/ { // TODO load tracks to List
     L.tileLayer('https://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}.png?apikey={apikey}', {
       attribution: '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       apikey: thunderforest.apikey,
-      maxZoom: 22
+      maxZoom: 22,
+      trackResize: true
     }).addTo(this.map);
   }
 

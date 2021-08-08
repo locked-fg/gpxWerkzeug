@@ -1,7 +1,48 @@
+#main-container {
+  background-color: lightgrey;
+  padding: 0px;
+
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+#main-container > * {
+  margin-left: 0px;
+  margin-right: 0px;
+}
+
+#container-header {
+  background-color: black;
+}
+
+#container-header h1{
+  color: white;
+  font-weight: bold;
+  font-size: 2rem;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 0px;
+}
+
+#container-body {
+  border-top: 5px solid white;
+  background-color: white;
+  flex: 1 1 auto;
+}
+
+#container-track-col {
+  border-right: 1px solid #cccccc;
+  padding-left: 5px;
+  padding-right: 5px;
+  min-width: 200px;
+}
+
 #tracklist {
-  padding: 0;
-  height: 90vh;
+  padding: 0px;
   overflow-y: scroll;
+  height: 70vh;
+  border-bottom: 1px solid #cccccc;
 }
 
 #tracklist li {
@@ -10,15 +51,27 @@
   font-size: small;
 }
 
+#container-map {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  padding: 0;
+}
+
 #mapid {
-  min-width: 310px;
-/*  height: 600px;*/
-  margin: 0 auto;
-  resize: vertical;
+  min-width: 200px;
+  height: 100%;
+  width: 100%;
+  flex: 1 1 auto;
+}
+
+#track-title{
+  font-size: 1rem;
 }
 
 #loadButton {
   margin-top: 20px;
+  width: 100%;
 }
 
 #tracksLoadingSpinner {
@@ -49,3 +102,8 @@ highcharts-chart {
 #ascent { }
 #heightDelta {  }
 
+#container-footer {
+  border-top: 1px solid white;
+  background-color: black;
+  height: 15px;
+}
