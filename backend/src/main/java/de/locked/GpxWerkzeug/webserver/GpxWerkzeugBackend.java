@@ -24,6 +24,7 @@ import java.util.*;
 
 import static java.util.Collections.EMPTY_LIST;
 import static java.util.stream.Collectors.toList;
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 @SpringBootApplication
 @RestController
@@ -59,7 +60,7 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         LOG.info("init SpringBoot");
         List<String> gpxSrc = args.getOptionValues("gpxSrc");
-        if (gpxSrc != null && !gpxSrc.isEmpty()) {
+        if (!isEmpty(gpxSrc)) {
             gpxSrcDir = gpxSrc;
         }
 //        LOG.trace("A TRACE Message");
