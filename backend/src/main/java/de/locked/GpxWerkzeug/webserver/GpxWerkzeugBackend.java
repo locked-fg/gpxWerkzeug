@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 import static java.util.Collections.EMPTY_LIST;
+import static java.util.Collections.reverse;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
@@ -86,6 +87,8 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
             var name = gpxPaths.get(i).getFileName().toString().replace(".gpx", "");
             out.add(new TracklistTuple(i, name));
         }
+        out.sort(Comparator.comparing(o -> o.name));
+        reverse(out);
         return out;
     }
 
