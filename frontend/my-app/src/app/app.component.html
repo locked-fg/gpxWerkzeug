@@ -55,26 +55,29 @@
       <div id="mapid"></div>
 
       <div *ngIf="selectedTrack" id="trackStats">
-        <span id="distance">Distanz: {{trackdata.length/1000|number:'1.0-2':'de-DE'}}&thinsp;km</span>
-        <span id="height">Höhe (min/max/delta)&thinsp;m:
-           {{trackdata.heightMin|number:'1.0-1':'de-DE'}} /
-           {{trackdata.heightMax|number:'1.0-1':'de-DE'}} /
-           {{trackdata.heightMax - trackdata.heightMin|number:'1.0-1':'de-DE'}}</span>
-        <span id="velocity">Geschwindigkeit (min/max/avg)&thinsp;km/h:
-          {{trackdata.vMin|number:'1.0-1':'de-DE'}} /
-          {{trackdata.vMax|number:'1.0-1':'de-DE'}} /
-          {{trackdata.vAvg|number:'1.0-1':'de-DE'}}</span>
-        <br>
-        <span id="traveltime">Zeit (total / in Bewegung):
-          {{trackdata.timeTotal|date:'h:mm'}}&thinsp;h /
-          {{trackdata.timeMoving|date:'h:mm'}}&thinsp;h</span>
-        <span id="heightDelta">Auf-/Abstieg:
-          {{trackdata.elevationUp|number:'1.0-0':'de-DE'}}&thinsp;m /
-          {{trackdata.elevationDown|number:'1.0-0':'de-DE'}}&thinsp;m</span>
-        <span id="ascent">Steigung (min/max/avg):
-          {{trackdata.ascentMin|number:'1.0-0':'de-DE'}}% /
-          {{trackdata.ascentMax|number:'1.0-0':'de-DE'}}% /
-          {{trackdata.ascentAvg|number:'1.0-0':'de-DE'}}%</span>
+        <div class="row1">
+          <div id="distance">Distanz: {{trackdata.length/1000|number:'1.0-2':'de-DE'}}&thinsp;km</div>
+          <div id="height">Höhe (min/max/delta):
+            {{trackdata.heightMin|number:'1.0-1':'de-DE'}}&thinsp;m /
+            {{trackdata.heightMax|number:'1.0-1':'de-DE'}}&thinsp;m /
+            {{trackdata.heightMax - trackdata.heightMin|number:'1.0-1':'de-DE'}}&thinsp;m</div>
+          <div id="velocity">Geschwindigkeit (min/max/avg)&thinsp;km/h:
+            {{trackdata.vMin|number:'1.0-1':'de-DE'}} /
+            {{trackdata.vMax|number:'1.0-1':'de-DE'}} /
+            {{trackdata.vAvg|number:'1.0-1':'de-DE'}}</div>
+        </div>
+        <div class="row2">
+          <div id="traveltime">Zeit (total / in Bewegung):
+            {{trackdata.timeTotal|date:'h:mm'}}&thinsp;h /
+            {{trackdata.timeMoving|date:'h:mm'}}&thinsp;h</div>
+          <div id="heightDelta">Auf-/Abstieg:
+            {{trackdata.elevationUp|number:'1.0-0':'de-DE'}}&thinsp;m /
+            {{trackdata.elevationDown|number:'1.0-0':'de-DE'}}&thinsp;m</div>
+          <div id="ascent">Steigung (min/max/avg):
+            {{trackdata.ascentMin|number:'1.0-0':'de-DE'}}% /
+            {{trackdata.ascentMax|number:'1.0-0':'de-DE'}}% /
+            {{trackdata.ascentAvg|number:'1.0-0':'de-DE'}}%</div>
+        </div>
       </div>
 
       <div *ngIf="selectedTrack">

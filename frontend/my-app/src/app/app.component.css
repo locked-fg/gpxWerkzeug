@@ -1,7 +1,6 @@
 #main-container {
   background-color: lightgrey;
   padding: 0px;
-
   display: flex;
   flex-flow: column;
   height: 100%;
@@ -18,7 +17,7 @@
 
 #container-header h1{
   color: white;
-  font-weight: bold;
+  font-family: Kalam;
   font-size: 2rem;
   padding-top: 10px;
   padding-bottom: 10px;
@@ -87,17 +86,39 @@ highcharts-chart {
 #trackStats {
   font-size: small;
   padding-top: 5px;
-  padding-bottom: 5px;
+  padding-bottom: 0px;
 }
 
-#trackStats span {
-  padding: 0px 3px 0px 3px;
-  border: 1px solid black;
+#trackStats > div {
+  padding: 0px;
+  margin: 0px;
 }
+
+#trackStats > div > div {
+  display: inline-block;
+  padding: 0px 3px 0px 3px;
+  margin: 0px;
+  border: 1px solid black;
+  border-right: none;
+  background-color: white;
+}
+
+#trackStats > .row1 {
+  margin-bottom: -1px; /* hide overlapping borders */
+}
+
+#trackStats > .row1 > div:last-child {
+  border-right: 1px solid black;
+}
+
+#trackStats > .row2 > div:last-child {
+  border-right: 1px solid black;
+}
+
 
 #distance { }
-#height { background-color: #ffaaaa; }
-#velocity { background-color: #aaaaff; }
+#height { background-color: #ffaaaa !important;}
+#velocity { background-color: #aaaaff !important; }
 #traveltime {  }
 #ascent { }
 #heightDelta {  }
