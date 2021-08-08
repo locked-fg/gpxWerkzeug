@@ -59,7 +59,7 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         LOG.info("init SpringBoot");
         List<String> gpxSrc = args.getOptionValues("gpxSrc");
-        if (!gpxSrc.isEmpty()){
+        if (gpxSrc != null && !gpxSrc.isEmpty()) {
             gpxSrcDir = gpxSrc;
         }
 //        LOG.trace("A TRACE Message");
