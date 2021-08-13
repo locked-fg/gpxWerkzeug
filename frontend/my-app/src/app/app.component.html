@@ -33,7 +33,8 @@
             *ngFor="let track of shownTracks"
             [class.active]="track === selectedTrack"
             (click)="onSelect(track)">
-            {{track.name}} ({{track.timestamp|date:'d.MMM y'}})
+            <div class="trackName">{{track.name}}</div>
+            <div class="trackDate">{{track.timestamp|date:'d.MMM y'}}</div>
           </li>
         </ul>
 
