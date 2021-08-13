@@ -20,10 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 
-import static java.util.Collections.EMPTY_LIST;
-import static java.util.Collections.reverse;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
@@ -43,7 +42,7 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
     // real vars
     private static final Logger LOG = LogManager.getLogger(GpxWerkzeugBackend.class);
     // the "DB"
-    private List<Path> gpxPaths = EMPTY_LIST;
+    private HashMap<Integer, Path> gpxDB = new HashMap<>();
     // the cache
     private final WeakHashMap<Path, Gpx> gpxCache = new WeakHashMap<>();
 
@@ -69,7 +68,15 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
 //        LOG.info("An INFO Message");
 //        LOG.warn("A WARN Message");
 //        LOG.error("An ERROR Message");
-        gpxPaths = GpxScanner.getGpxPaths(gpxSrcDir).collect(toList());
+        loadPaths();
+    }
+
+    private void loadPaths() throws IOException {
+        LOG.info("Loading paths");
+        var gpxPaths = GpxScanner.getGpxPaths(gpxSrcDir).collect(toList());
+        for (int i = 0; i < gpxPaths.size(); i++) {
+            gpxDB.put(i, gpxPaths.get(i));
+        }
     }
 
     @GetMapping("/hello")
@@ -82,36 +89,29 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
      */
     @GetMapping("/api/getTracklist")
     public List<TracklistTuple> getTracklist() {
-        var out = new ArrayList<TracklistTuple>();
-        for (int i = 0; i < gpxPaths.size(); i++) { // TODO that'S ugly
-            var path = gpxPaths.get(i);
-            Optional<Gpx> gpxOptional = Optional.empty();
-            if (!gpxCache.containsKey(path)){
-                gpxOptional = GpxParser.toGPX(path);
-                gpxOptional.ifPresent(gpx -> gpxCache.put(path, gpx));
-            }
-            gpxOptional = Optional.ofNullable(gpxCache.get(path));
-
-            if (gpxOptional.isPresent()){
-                var timestamp = gpxOptional.get().getDate().getTime();
-                var name = path.getFileName().toString().replace(".gpx", "");
-                out.add(new TracklistTuple(i, name, timestamp));
-            }
-        }
-        out.sort(Comparator.comparing(o -> o.timestamp));
-        reverse(out);
-        return out;
+        var tracklist = gpxDB.entrySet().stream().parallel()
+                .map(e -> new SimpleEntry<>(e.getKey(), getCleanedGpx(e.getValue())))
+                .filter(e -> e.getValue().isPresent())
+                .map(e -> {
+                    var i = e.getKey();
+                    var timestamp = e.getValue().get().getDate().getTime();
+                    var name = gpxDB.get(i).getFileName().toString().replace(".gpx", "");
+                    return new TracklistTuple(i, name, timestamp);
+                })
+                .sorted(Comparator.comparing(o -> -o.timestamp))
+                .collect(toList());
+        return tracklist;
     }
 
     @GetMapping("/api/getPolyLine")
     public List<List<Double[]>> getPolyLine(@RequestParam(value = "id") int id, HttpServletResponse response) {
-        if (id < 0 || id >= gpxPaths.size()) response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-        return pathToPolyline(gpxPaths.get(id));
+        if (!gpxDB.containsKey(id)) response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        return pathToPolyline(gpxDB.get(id));
     }
 
     @GetMapping("/api/getAllTracksAsPolyLine")
     public List<List<Double[]>> getAllTracksAsPolyLine(HttpServletResponse response) {
-        return gpxPaths.stream().parallel()
+        return gpxDB.values().stream().parallel()
                 .map(this::pathToPolyline)
                 .flatMap(Collection::stream)
                 .collect(toList());
@@ -119,8 +119,8 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
 
     @GetMapping("/api/getStatistics")
     public GpxStatistics getStatistics(@RequestParam(value = "id") int id, HttpServletResponse response) {
-        if (id < 0 || id >= gpxPaths.size()) response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-        return getCleanedGpx(gpxPaths.get(id))
+        if (!gpxDB.containsKey(id)) response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        return getCleanedGpx(gpxDB.get(id))
                 .map(g -> new GpxStatisticsCalculator().calc(g, MIN_METERS_FOR_MOVEMENT).stats).orElse(null);
     }
 
@@ -137,10 +137,11 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
 //                .orElse(null);
 //    }
 //
+
     @GetMapping("/api/getChartData")
     public ChartData getChartData(@RequestParam(value = "id") int id, HttpServletResponse response) {
-        if (id < 0 || id >= gpxPaths.size()) response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-        return getCleanedGpx(gpxPaths.get(id))
+        if (!gpxDB.containsKey(id)) response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        return getCleanedGpx(gpxDB.get(id))
                 .map(g -> new GpxStatisticsCalculator().calc(g, MIN_METERS_FOR_MOVEMENT))
                 .map(s -> new ChartData(
                         s.getElevationArray(),
