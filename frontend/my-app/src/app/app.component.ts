@@ -344,7 +344,7 @@ export class AppComponent /*implements OnInit*/ { // TODO load tracks to List
 }
 
 export class TracklistTuple{
-  constructor(public id: number, public name: string){}
+  constructor(public id: number, public name: string, public  timestamp: number){}
 }
 
 class Point{

@@ -83,11 +83,22 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
     @GetMapping("/api/getTracklist")
     public List<TracklistTuple> getTracklist() {
         var out = new ArrayList<TracklistTuple>();
-        for (int i = 0; i < gpxPaths.size(); i++) {
-            var name = gpxPaths.get(i).getFileName().toString().replace(".gpx", "");
-            out.add(new TracklistTuple(i, name));
+        for (int i = 0; i < gpxPaths.size(); i++) { // TODO that'S ugly
+            var path = gpxPaths.get(i);
+            Optional<Gpx> gpxOptional = Optional.empty();
+            if (!gpxCache.containsKey(path)){
+                gpxOptional = GpxParser.toGPX(path);
+                gpxOptional.ifPresent(gpx -> gpxCache.put(path, gpx));
+            }
+            gpxOptional = Optional.ofNullable(gpxCache.get(path));
+
+            if (gpxOptional.isPresent()){
+                var timestamp = gpxOptional.get().getDate().getTime();
+                var name = path.getFileName().toString().replace(".gpx", "");
+                out.add(new TracklistTuple(i, name, timestamp));
+            }
         }
-        out.sort(Comparator.comparing(o -> o.name));
+        out.sort(Comparator.comparing(o -> o.timestamp));
         reverse(out);
         return out;
     }

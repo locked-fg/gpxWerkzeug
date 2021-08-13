@@ -1,6 +1,7 @@
 package de.locked.GpxWerkzeug.gpx;
 
 import javax.xml.bind.annotation.*;
+import java.util.Date;
 import java.util.Optional;
 
 @XmlRootElement
@@ -26,5 +27,15 @@ public class Gpx {
                 ", metadata=" + metadata +
                 ", trk=" + trk +
                 '}';
+    }
+
+    public Date getDate(){
+        if (metadata != null && metadata.time != null) {
+            return metadata.time;
+        }
+        if (trk != null && !trk.getTrkseg().isEmpty()){
+            return trk.getTrkseg().get(0).getTrkpt().get(0).getTime();
+        }
+        throw new IllegalStateException("TRack does not contain an element with a date?!");
     }
 }
