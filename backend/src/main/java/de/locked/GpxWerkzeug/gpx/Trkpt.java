@@ -3,6 +3,7 @@ package de.locked.GpxWerkzeug.gpx;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import java.util.Date;
+import java.util.Optional;
 
 public final class Trkpt {
     @XmlAttribute
@@ -15,10 +16,14 @@ public final class Trkpt {
     private final Date time;
 
     public Trkpt(Double lat, Double lon, Double ele, Date time) {
+        this(lat, lon, ele, Optional.of(time));
+    }
+
+    public Trkpt(Double lat, Double lon, Double ele, Optional<Date> time) {
         this.lat = lat;
         this.lon = lon;
         this.ele = ele;
-        this.time = time;
+        this.time = time.orElse(null);
     }
 
     public Trkpt() {
@@ -40,8 +45,8 @@ public final class Trkpt {
         return ele == null ? 0 : ele;
     }
 
-    public Date getTime() {
-        return time;
+    public Optional<Date> getTime() {
+        return Optional.ofNullable(time);
     }
 
     @Override

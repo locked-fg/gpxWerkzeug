@@ -89,17 +89,26 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
      */
     @GetMapping("/api/getTracklist")
     public List<TracklistTuple> getTracklist() {
-        var tracklist = gpxDB.entrySet().stream().parallel()
+        var tracklist = gpxDB.entrySet().stream()
                 .map(e -> new SimpleEntry<>(e.getKey(), getCleanedGpx(e.getValue())))
                 .filter(e -> e.getValue().isPresent())
                 .map(e -> {
-                    var i = e.getKey();
-                    var timestamp = e.getValue().get().getDate().getTime();
-                    var name = gpxDB.get(i).getFileName().toString().replace(".gpx", "");
-                    return new TracklistTuple(i, name, timestamp);
+                    try {
+                        var index = e.getKey();
+                        var timestamp = e.getValue().get().getDate()
+                                .map(Date::getTime)
+                                .orElse(null);
+                        var name = gpxDB.get(index).getFileName().toString().replace(".gpx", "");
+                        return new TracklistTuple(index, name, timestamp);
+                    } catch (Throwable t){
+                        LOG.error("error in e: {}", e);
+                        throw t;
+                    }
                 })
-                .sorted(Comparator.comparing(o -> -o.timestamp))
+                .sorted(new TracklistTupleComparator())
                 .collect(toList());
+        Collections.reverse(tracklist);
+        LOG.info("tracklist size: {}", tracklist.size());
         return tracklist;
     }
 
@@ -154,13 +163,14 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
     private Optional<Gpx> getCleanedGpx(Path p) {
         var gpx = gpxCache.get(p);
         if (gpx != null) {
+            LOG.info("no GPXCache entry for path {}", p);
             return Optional.of(gpx);
         } else {
             var gpxOptional = GpxParser.toGPX(p)
                     // .map(gpx -> GpxCleaner.cleanPauses(gpx, MIN_METERS_FOR_MOVEMENT))
                     .map(GpxCleaner::cleanElevationOutliers)
                     .map(gpxTrack -> GpxCleaner.splitByDist(gpxTrack, MAX_DIST_METERS_BEFORE_SPLIT));
-            gpxCache.put(p, gpxOptional.orElse(null));
+            gpxOptional.ifPresent(v -> gpxCache.put(p, v));
             return gpxOptional;
         }
     }

@@ -6,9 +6,8 @@ import de.locked.GpxWerkzeug.gpx.Trkseg;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.DoubleSummaryStatistics;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
 import static java.lang.Math.asin;
@@ -32,6 +31,7 @@ public class GpxStatisticsCalculator {
     public GpxStatisticsCalculator calc(Gpx gpx, int minMetersForMovement) {
         compute(gpx, minMetersForMovement);
         // smooth(KERNEL_SIZE);
+        computeTripDuration(gpx);
         computeMinMaxAvg();
         return this;
     }
@@ -75,8 +75,20 @@ public class GpxStatisticsCalculator {
             lastPoint = seg.getTrkpt().get(seg.getTrkpt().size() - 1);
             compute(seg.getTrkpt(), minMetersForMovement);
         }
+    }
 
-        stats.timeTotal = lastPoint.getTime().getTime() - firstPoint.getTime().getTime();
+    private void computeTripDuration(Gpx gpx) {
+        var dates = gpx.trk.getTrkseg().stream().parallel()
+                .flatMap(seg -> seg.getTrkpt().stream())
+                .map(Trkpt::getTime)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
+        if (!dates.isEmpty()) {
+            var dateMin = Collections.min(dates);
+            var dateMax = Collections.max(dates);
+            stats.timeTotal = dateMax.getTime() - dateMin.getTime();
+        }
     }
 
     void compute(List<Trkpt> seg, final int minMetersForMovement) {
@@ -100,15 +112,27 @@ public class GpxStatisticsCalculator {
                 // distance & time
                 var dist = d(lastPoint, p);
                 distanceSeries.add(dist);
-                var timeDelta = p.getTime().getTime() - lastPoint.getTime().getTime(); // ms
-                var v = (dist / 1000.) / (timeDelta / 3600000.); // km/h
-                velocitySeries.add(v);
                 stats.length += dist;
+
+                var timeDelta = timeDelta(p, lastPoint); // ms
+                var v = timeDelta
+                        .map(t -> (dist / 1000.) / (t / 3600000.)) // km/h
+                        .orElse(0d);
                 if (dist > minMetersForMovement) {
-                    stats.timeMoving += timeDelta;
+                    stats.timeMoving += timeDelta.orElse(0L);
                 }
             }
             lastPoint = p;
+        }
+    }
+
+    private Optional<Long> timeDelta(Trkpt a, Trkpt b){
+        if ( a.getTime().isPresent() && b.getTime().isPresent()){
+            var la = a.getTime().get().getTime();
+            var lb = b.getTime().get().getTime();
+            return Optional.of(Math.abs(lb - la));
+        } else {
+            return Optional.empty();
         }
     }
 

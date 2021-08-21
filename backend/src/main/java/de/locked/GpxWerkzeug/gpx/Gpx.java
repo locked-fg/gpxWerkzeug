@@ -29,13 +29,14 @@ public class Gpx {
                 '}';
     }
 
-    public Date getDate(){
+    public Optional<Date> getDate(){
         if (metadata != null && metadata.time != null) {
-            return metadata.time;
+            return Optional.of(metadata.time);
         }
         if (trk != null && !trk.getTrkseg().isEmpty()){
-            return trk.getTrkseg().get(0).getTrkpt().get(0).getTime();
+            var pt =  trk.getTrkseg().get(0).getTrkpt().get(0);
+            return pt.getTime();
         }
-        throw new IllegalStateException("TRack does not contain an element with a date?!");
+        return Optional.empty();
     }
 }
