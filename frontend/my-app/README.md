@@ -26,11 +26,26 @@ Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protrac
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
 
-# How to init
+# How to init deploy
 ```
   npm install -g @angular/cli
   ng new my-app
   cd my-app
+?? npm link @angular/cli
+  ng install
+```
+
+# Maintenance
+## Your global Angular CLI version (12.0.2) is greater than your local version (11.0.5). The local Angular CLI version is used.
+https://stackoverflow.com/questions/44525746/global-angular-cli-version-greater-than-local-version
+```
+ng --version
+npm install --save-dev @angular/cli@latest
+ng --version
+```
+
+# How to run
+```
   ng serve --open --environment=dev
 ```
 

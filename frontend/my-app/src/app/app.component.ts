@@ -27,20 +27,22 @@ export class AppComponent /*implements OnInit*/ { // TODO load tracks to List
   private readonly URL_GET_CHART_DATA = 'http://localhost:4201/api/getChartData?id=';
 
   title = 'GpxWerkzeug';
+  tracks: TracklistTuple[] = [];
   shownTracks: TracklistTuple[] = [];
   selectedTrack: TracklistTuple|undefined;
   trackdata: GpxStatistics = new GpxStatistics();
   flatTrackLocations: Point[] = []; // used to reference from height profile to the right lat-lon
+  trackFilterText = "";
 
   // Loading & spinner
   disableLoadButton = false;
   showTracksLoadingSpinner = false;
+  tracklistFilter = "";
 
   // map
   map: any;
   mapMarkers: any = [];
   mapHighchartsMarker: any;
-//  cssMapHeightValue = "600px";
 
   // navigation
   navAllAriaCurrent = '';
@@ -134,6 +136,18 @@ export class AppComponent /*implements OnInit*/ { // TODO load tracks to List
     this.showTracksLoadingSpinner = loading;
   }
 
+  setTrackFilter(evt: any){
+    this.trackFilterText = evt.target.value.toLowerCase();
+    this.applyTrackFilter();
+  }
+
+  applyTrackFilter() {
+    console.log("applyTrackFilter: " + this.trackFilterText);
+    this.shownTracks = [];
+    this.shownTracks = this.tracks
+      .filter(t => t.name.toLowerCase().includes(this.trackFilterText));
+  }
+
   onNavClick(item: string): void {
     console.log('click ' + item);
     // set nav bar class and aria correctly
@@ -141,8 +155,6 @@ export class AppComponent /*implements OnInit*/ { // TODO load tracks to List
     this.navAllActive         = (item === 'all');
     this.navTracksAriaCurrent = (item === 'tracks') ? 'page' : '';
     this.navTracksActive      = (item === 'tracks');
-    // adjust Map Height
-//    this.cssMapHeightValue    = (item === 'all')    ? '90vh' : '600px';
 
     // Todo: these 2 should/could reside in one data structure?
     this.selectedTrack = undefined;
@@ -154,7 +166,6 @@ export class AppComponent /*implements OnInit*/ { // TODO load tracks to List
     if (item === 'all'){
       this.loadAllTracksToMap();
     }
-
   }
 
   loadAllTracksToMap(): void {
@@ -172,9 +183,12 @@ export class AppComponent /*implements OnInit*/ { // TODO load tracks to List
   onClickReloadTracks(): void {
     console.log('(re)load tracks');
     this.setLoadingAnimation(true);
-    this.shownTracks = [];
+    this.tracks = [];
     this.http.get<TracklistTuple[]>(this.URL_GET_TRACKLIST).subscribe({
-      next: (res) => res.forEach(t => this.shownTracks.push(t)),
+      next: (res) => res.forEach(t => {
+        this.tracks.push(t);
+        this.applyTrackFilter();
+      }),
       error: error => console.error(error),
       complete: () => this.setLoadingAnimation(false)
     });

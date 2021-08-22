@@ -37,6 +37,11 @@
   min-width: 200px;
 }
 
+#tracksearch {
+  margin-top: 5px;
+  margin-bottom: 5px !important;
+}
+
 #tracklist {
   padding: 0px;
   overflow-y: scroll;
