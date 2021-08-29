@@ -11,7 +11,6 @@ import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.ZoneOffset;
-import java.util.Calendar;
 import java.util.Objects;
 import java.util.TimeZone;
 
@@ -20,9 +19,9 @@ import static org.junit.jupiter.api.Assertions.*;
 public class GpxParserTest {
     private SimpleDateFormat sdf;
 
-    private File getTestFile(String filenme){
+    private File getTestFile(String filename) {
         return new File(Objects.requireNonNull(
-                getClass().getClassLoader().getResource(filenme)).getFile()
+                getClass().getClassLoader().getResource(filename)).getFile()
         );
     }
 
