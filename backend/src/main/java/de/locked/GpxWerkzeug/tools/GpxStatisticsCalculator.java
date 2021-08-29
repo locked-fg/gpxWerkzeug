@@ -19,11 +19,11 @@ public class GpxStatisticsCalculator {
     private static final int KERNEL_SIZE = 7;
     private static final Distance DIST = new DistanceHaversine();
 
-    private final List<Double> distanceSeries = new ArrayList<>(); // m distance deltas!
-    private final List<Double> elevationSeries = new ArrayList<>(); // m
-    private final List<Double> elevationDeltaSeries = new ArrayList<>(); // m
-    private final List<Double> velocitySeries = new ArrayList<>(); // km/h
-    private final List<Double> ascentSeries = new ArrayList<>(); // %
+    final List<Double> distanceSeries = new ArrayList<>(); // m distance deltas!
+    final List<Double> elevationSeries = new ArrayList<>(); // m
+    final List<Double> elevationDeltaSeries = new ArrayList<>(); // m
+    final List<Double> velocitySeries = new ArrayList<>(); // km/h
+    final List<Double> ascentSeries = new ArrayList<>(); // %
     private double[] kernel;
 
     public final GpxStatistics stats = new GpxStatistics();
@@ -65,7 +65,7 @@ public class GpxStatisticsCalculator {
         src.addAll(dst);
     }
 
-    private void compute(Gpx gpx, final int minMetersForMovement) {
+    void compute(Gpx gpx, final int minMetersForMovement) {
         Trkpt firstPoint = null;
         Trkpt lastPoint = null;
 
@@ -77,12 +77,12 @@ public class GpxStatisticsCalculator {
         }
     }
 
-    private void computeTripDuration(Gpx gpx) {
-        var dates = gpx.trk.getTrkseg().stream().parallel()
+    void computeTripDuration(Gpx gpx) {
+        var dates = gpx.getTrk().stream()
+                .flatMap(t -> t.getTrkseg().stream())
                 .flatMap(seg -> seg.getTrkpt().stream())
                 .map(Trkpt::getTime)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .flatMap(Optional::stream)
                 .collect(Collectors.toList());
         if (!dates.isEmpty()) {
             var dateMin = Collections.min(dates);
@@ -127,8 +127,15 @@ public class GpxStatisticsCalculator {
         }
     }
 
-    private Optional<Long> timeDelta(Trkpt a, Trkpt b){
-        if ( a.getTime().isPresent() && b.getTime().isPresent()){
+    /**
+     * returns the milliseconds delta between the trackpoints (if both have a time)
+     *
+     * @param a
+     * @param b
+     * @return optional(abs ( a.time - b.time)) or empty
+     */
+    Optional<Long> timeDelta(Trkpt a, Trkpt b) {
+        if (a.getTime().isPresent() && b.getTime().isPresent()) {
             var la = a.getTime().get().getTime();
             var lb = b.getTime().get().getTime();
             return Optional.of(Math.abs(lb - la));
@@ -143,7 +150,7 @@ public class GpxStatisticsCalculator {
         return d;
     }
 
-    private void computeMinMaxAvg() {
+    void computeMinMaxAvg() {
         // elevation
         var elevStats = stats(elevationSeries);
         stats.heightMin = elevStats.getMin();
