@@ -118,6 +118,7 @@ public class GpxStatisticsCalculator {
                 var v = timeDelta
                         .map(t -> (dist / 1000.) / (t / 3600000.)) // km/h
                         .orElse(0d);
+                velocitySeries.add(v);
                 if (dist > minMetersForMovement) {
                     stats.timeMoving += timeDelta.orElse(0L);
                 }
