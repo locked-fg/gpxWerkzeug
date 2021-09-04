@@ -35,6 +35,7 @@ public class GpxCleaner {
      * @param in list of points
      * @return list of points with (possibly) adjusted heights
      */
+    @Deprecated
     public static List<Trkpt> cleanElevationOutliers(final List<Trkpt> in) {
         var elevs = cleanOutlier(in.stream().map(Trkpt::getEle).collect(toList()));
         var out = new ArrayList<Trkpt>(in.size());
@@ -45,6 +46,7 @@ public class GpxCleaner {
         return out;
     }
 
+    @Deprecated
     private static List<Double> cleanOutlier(final List<Double> input) {
         final var deltas = toDelta(input);
         final var stats = new SummaryStatistics();
@@ -124,13 +126,16 @@ public class GpxCleaner {
     }
 
     /**
-     * remove points during a pause
+     * Remove points during a pause. A pause is defined as "all successive points within
+     * a certin distance".
+     * Iterates through a TrkSeg and removes points with a distance less than maxDistMeters
+     * to the preceding point.
      *
      * @param seg
      * @param maxDistMeters
-     * @return
+     * @return a new TrkSeg
      */
-    public static Optional<Trkseg> cleanPauses(final Trkseg seg, final int maxDistMeters) {
+    public static Optional<Trkseg> collapsPauses(final Trkseg seg, final int maxDistMeters) {
         var in = seg.getTrkpt();
         if (in.size() <= 1) return Optional.empty();
 
@@ -146,7 +151,7 @@ public class GpxCleaner {
             }
         }
 
-        if (seg.size() != out.size()) {
+        if (LOG.isDebugEnabled() && seg.size() != out.size()) {
             int delta = seg.size() - out.size();
             LOG.debug("{} points removed: {} -> {} (maxDist: {}m)", delta, seg.size(), out.size(), maxDistMeters);
         }
@@ -155,9 +160,19 @@ public class GpxCleaner {
         else return Optional.of(new Trkseg(out));
     }
 
-    public static Gpx cleanPauses(Gpx gpx, final int threshold) {
+    /**
+     * Remove points during a pause. A pause is defined as "all successive points within
+     * a certin distance".
+     * Iterates through the TrkSegs of the GPX and removes points with a distance less than maxDistMeters
+     * to the preceding point. The GPX object is reused. The TrkSeg is replaced.
+     *
+     * @param gpx
+     * @param maxDistMeters
+     * @return the incoming and modified GPX object
+     */
+    public static Gpx collapsPauses(Gpx gpx, final int maxDistMeters) {
         gpx.trk.trkseg = gpx.trk.trkseg.stream()
-                .map(s -> cleanPauses(s, threshold))
+                .map(s -> collapsPauses(s, maxDistMeters))
                 .flatMap(Optional::stream)
                 .collect(toList());
         return gpx;

@@ -47,19 +47,19 @@ class GpxCleanerTest {
 
     @Test
     void test_cleanPauses() {
-        Optional<Trkseg> s1 = GpxCleaner.cleanPauses(seg2, 1500);
+        Optional<Trkseg> s1 = GpxCleaner.collapsPauses(seg2, 1500);
         assertTrue(s1.isEmpty(), "should be empty");
 
-        Optional<Trkseg> s2 = GpxCleaner.cleanPauses(seg2, 1);
+        Optional<Trkseg> s2 = GpxCleaner.collapsPauses(seg2, 1);
         assertTrue(s2.isPresent(), "should not be empty");
         assertEquals(2, s2.get().size(), "there should be 2 points");
 
-        Optional<Trkseg> s3 = GpxCleaner.cleanPauses(seg6, 1500);
+        Optional<Trkseg> s3 = GpxCleaner.collapsPauses(seg6, 1500);
         assertTrue(s3.isEmpty(), "should be empty");
-        Optional<Trkseg> s31 = GpxCleaner.cleanPauses(seg6, 1);
+        Optional<Trkseg> s31 = GpxCleaner.collapsPauses(seg6, 1);
         assertEquals(6, s31.get().size(), "there should be 6 points");
 
-        Optional<Trkseg> s4 = GpxCleaner.cleanPauses(seg6, 40);
+        Optional<Trkseg> s4 = GpxCleaner.collapsPauses(seg6, 40);
         assertTrue(s4.isPresent(), "should not be empty");
         assertEquals(seg6.getTrkpt().get(0).getLat(), s4.get().getTrkpt().get(0).getLat(), 0.00001);
         //

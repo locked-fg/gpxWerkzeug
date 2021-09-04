@@ -222,6 +222,7 @@ export class AppComponent /*implements OnInit*/ { // TODO load tracks to List
           const dist = res.distance.map(v => v / 1000.0); // km
           const elev = res.elevation.map((v, i) => [dist[i], v]);
           const velo = res.velocity.map((v, i) => [dist[i], v]);
+          // const velo = res.ascend.map((v, i) => [dist[i], v]);
           // let the compiler know the type
           if (this.chartOptions.series[0].type === 'area' && this.chartOptions.series[1].type === 'area') {
             this.chartOptions.series[0].data = elev; // elevation
@@ -366,5 +367,5 @@ class Point{
 }
 
 class ChartData{
-  constructor(public elevation: number[], public velocity: number[], public distance: number[]){}
+  constructor(public elevation: number[], public velocity: number[], public distance: number[], public ascend: number[]){}
 }

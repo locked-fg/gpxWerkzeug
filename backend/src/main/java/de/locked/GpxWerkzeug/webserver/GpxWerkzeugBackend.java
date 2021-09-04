@@ -1,10 +1,7 @@
 package de.locked.GpxWerkzeug.webserver;
 
 import de.locked.GpxWerkzeug.gpx.Gpx;
-import de.locked.GpxWerkzeug.tools.GpxCleaner;
-import de.locked.GpxWerkzeug.tools.GpxParser;
-import de.locked.GpxWerkzeug.tools.GpxStatistics;
-import de.locked.GpxWerkzeug.tools.GpxStatisticsCalculator;
+import de.locked.GpxWerkzeug.tools.*;
 import de.locked.GpxWerkzeug.webserver.api.ChartData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,6 +34,7 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
             "F://info_000/Pictures/DigiCam Raw/",
             "Z://Onedrive-Backup-sync/encrypted/DigiCam Raw/");
     private static final int MIN_METERS_FOR_MOVEMENT = 10;
+    private static final int KERNEL_SIZE = 3;
     private static final int MAX_DIST_METERS_BEFORE_SPLIT = 1000;
 
     // real vars
@@ -130,45 +128,32 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
     public GpxStatistics getStatistics(@RequestParam(value = "id") int id, HttpServletResponse response) {
         if (!gpxDB.containsKey(id)) response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         return getCleanedGpx(gpxDB.get(id))
-                .map(g -> new GpxStatisticsCalculator().calc(g, MIN_METERS_FOR_MOVEMENT).stats).orElse(null);
+                .map(g -> new GpxStatisticsCalculator(g, MIN_METERS_FOR_MOVEMENT, KERNEL_SIZE).stats)
+                    .orElse(null);
     }
-
-    //    @GetMapping("/api/getChartData")
-//    public Double[][] getChartData(@RequestParam(value = "id") int id, HttpServletResponse response) {
-//        if (id < 0 || id >= gpxPaths.size()) response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-//        return getCleanedGpx(gpxPaths.get(id))
-//                .map(g -> new GpxStatisticsCalculator().calc(g, MIN_METERS_FOR_MOVEMENT))
-//                .map(s -> new Double[][]{
-//                        s.getElevationArray(),
-//                        s.getVelocityArray(),
-//                        s.getDistanceRunningSumArray()
-//                })
-//                .orElse(null);
-//    }
-//
 
     @GetMapping("/api/getChartData")
     public ChartData getChartData(@RequestParam(value = "id") int id, HttpServletResponse response) {
         if (!gpxDB.containsKey(id)) response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         return getCleanedGpx(gpxDB.get(id))
-                .map(g -> new GpxStatisticsCalculator().calc(g, MIN_METERS_FOR_MOVEMENT))
+                .map(g -> new GpxStatisticsCalculator(g, MIN_METERS_FOR_MOVEMENT, KERNEL_SIZE))
                 .map(s -> new ChartData(
-                        s.getElevationArray(),
-                        s.getVelocityArray(),
-                        s.getDistanceRunningSumArray()
+                            s.getElevationArray(),
+                            s.getVelocityArray(),
+                            s.getDistanceRunningSumArray(),
+                            s.getAscendArray()
                 ))
                 .orElse(null);
     }
 
     private Optional<Gpx> getCleanedGpx(Path p) {
-        var gpx = gpxCache.get(p);
-        if (gpx != null) {
+        var cached = gpxCache.get(p);
+        if (cached != null) {
             LOG.info("no GPXCache entry for path {}", p);
-            return Optional.of(gpx);
+            return Optional.of(cached);
         } else {
             var gpxOptional = GpxParser.toGPX(p)
-                    // .map(gpx -> GpxCleaner.cleanPauses(gpx, MIN_METERS_FOR_MOVEMENT))
-                    .map(GpxCleaner::cleanElevationOutliers)
+                    .map(gpx -> GpxCleaner.collapsPauses(gpx, MIN_METERS_FOR_MOVEMENT))
                     .map(gpxTrack -> GpxCleaner.splitByDist(gpxTrack, MAX_DIST_METERS_BEFORE_SPLIT));
             gpxOptional.ifPresent(v -> gpxCache.put(p, v));
             return gpxOptional;

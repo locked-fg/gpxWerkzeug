@@ -1,6 +1,7 @@
 package de.locked.GpxWerkzeug.tools;
 
 import de.locked.GpxWerkzeug.gpx.Gpx;
+import de.locked.GpxWerkzeug.gpx.Trk;
 import de.locked.GpxWerkzeug.gpx.Trkpt;
 import de.locked.GpxWerkzeug.gpx.Trkseg;
 import org.apache.logging.log4j.LogManager;
@@ -13,85 +14,76 @@ import java.util.stream.DoubleStream;
 import static java.lang.Math.asin;
 import static java.lang.Math.tan;
 
-// TODO add Tests
 public class GpxStatisticsCalculator {
     private static final Logger LOG = LogManager.getLogger(GpxStatisticsCalculator.class);
-    private static final int KERNEL_SIZE = 7;
     private static final Distance DIST = new DistanceHaversine();
 
-    final List<Double> distanceSeries = new ArrayList<>(); // m distance deltas!
-    final List<Double> elevationSeries = new ArrayList<>(); // m
-    final List<Double> elevationDeltaSeries = new ArrayList<>(); // m
-    final List<Double> velocitySeries = new ArrayList<>(); // km/h
-    final List<Double> ascentSeries = new ArrayList<>(); // %
-    private double[] kernel;
+    List<Long> timeSeries = new ArrayList<>(); // milliseconds deltas!
+    List<Double> distanceSeries = new ArrayList<>(); // m distance deltas!
+    List<Double> elevationSeries = new ArrayList<>(); // m
+    List<Double> elevationDeltaSeries = new ArrayList<>(); // m
+    List<Double> velocitySeries = new ArrayList<>(); // km/h
+    List<Double> ascentSeries = new ArrayList<>(); // %
 
     public final GpxStatistics stats = new GpxStatistics();
 
-    public GpxStatisticsCalculator calc(Gpx gpx, int minMetersForMovement) {
-        compute(gpx, minMetersForMovement);
-        // smooth(KERNEL_SIZE);
-        computeTripDuration(gpx);
-        computeMinMaxAvg();
-        return this;
+    GpxStatisticsCalculator() {}
+
+    public GpxStatisticsCalculator(Gpx gpx, final int minMetersForMovement, final int kernelSize) {
+        computeSeries(gpx);
+        smoothSeries(kernelSize);
+        computeStatsLength();
+        computeStatsTimeMoving(minMetersForMovement);
+        computeStatsTimeTotal(gpx);
+        computeStatsMinMaxAvg();
     }
 
-    private void initKernel(int k) {
-        kernel = DoubleStream.generate(() -> 1d / k)
-                .limit(k).toArray();
+    void smoothSeries(final int kernelSize) {
+        distanceSeries = Utils.smooth(kernelSize, distanceSeries);
+        elevationSeries = Utils.smooth(kernelSize, elevationSeries);
+        elevationDeltaSeries = Utils.smooth(kernelSize, elevationDeltaSeries);
+        velocitySeries = Utils.smooth(kernelSize, velocitySeries);
+        ascentSeries = Utils.smooth(kernelSize, ascentSeries);
     }
 
-    private void smooth(int kernel) {
-        if (kernel % 2 == 0) throw new IllegalArgumentException("kernel size must be odd but was " + kernel);
-        if (kernel < 3) throw new IllegalArgumentException("kernel size must be >= 3 but was " + kernel);
-        initKernel(kernel);
-        smoothList(elevationSeries);
-        smoothList(velocitySeries);
-        // smoothList(elevationDeltaSeries);
-        // smoothList(ascentSeries);
-    }
-
-    private void smoothList(List<Double> src) {
-        var dst = new ArrayList<>(src);
-        var d = kernel.length / 2;
-        for (int i = kernel.length - 2; i < src.size() - kernel.length - 2; i++) {
-            var v = 0.;
-            for (int j = 0; j < kernel.length; j++) {
-                v += src.get(i - d + j) * kernel[j];
+    private void computeStatsTimeMoving(final int minMetersForMovement) {
+        for (int i = 0; i < distanceSeries.size(); i++) {
+            if (distanceSeries.get(i) > minMetersForMovement) {
+                stats.timeMoving += timeSeries.get(i);
             }
-            dst.set(i, v);
-        }
-        src.clear();
-        src.addAll(dst);
-    }
-
-    void compute(Gpx gpx, final int minMetersForMovement) {
-        Trkpt firstPoint = null;
-        Trkpt lastPoint = null;
-
-        for (Trkseg seg : gpx.trk.trkseg) {
-            if (firstPoint == null)
-                firstPoint = seg.trkpt.get(0);
-            lastPoint = seg.getTrkpt().get(seg.getTrkpt().size() - 1);
-            compute(seg.getTrkpt(), minMetersForMovement);
         }
     }
 
-    void computeTripDuration(Gpx gpx) {
+    private void computeStatsLength() {
+        stats.length = distanceSeries.stream().mapToDouble(Double::doubleValue).sum();
+    }
+
+    void computeSeries(Gpx gpx) {
+        gpx.getTrk().stream()
+                .map(Trk::getTrkseg)
+                .flatMap(Collection::stream)
+                .map(Trkseg::getTrkpt)
+                .forEach(this::computeSeries);
+    }
+
+    void computeStatsTimeTotal(Gpx gpx) {
+        // unpack the Trackpoints over all Tracks & Segments
         var dates = gpx.getTrk().stream()
                 .flatMap(t -> t.getTrkseg().stream())
                 .flatMap(seg -> seg.getTrkpt().stream())
+                .parallel()
                 .map(Trkpt::getTime)
                 .flatMap(Optional::stream)
+                .map(Date::getTime)
                 .collect(Collectors.toList());
         if (!dates.isEmpty()) {
             var dateMin = Collections.min(dates);
             var dateMax = Collections.max(dates);
-            stats.timeTotal = dateMax.getTime() - dateMin.getTime();
+            stats.timeTotal = dateMax - dateMin;
         }
     }
 
-    void compute(List<Trkpt> seg, final int minMetersForMovement) {
+    void computeSeries(List<Trkpt> seg) {
         Trkpt firstPoint = null;
         Trkpt lastPoint = null;
 
@@ -104,6 +96,7 @@ public class GpxStatisticsCalculator {
                 ascentSeries.add(0d);
                 velocitySeries.add(0d);
                 distanceSeries.add(0d);
+                timeSeries.add(0L);
             } else {
                 // elevation
                 elevationDeltaSeries.add(lastPoint.getEle() - p.getEle());
@@ -112,16 +105,13 @@ public class GpxStatisticsCalculator {
                 // distance & time
                 var dist = d(lastPoint, p);
                 distanceSeries.add(dist);
-                stats.length += dist;
 
                 var timeDelta = timeDelta(p, lastPoint); // ms
+                timeSeries.add(timeDelta.orElse(0L)); // or store the optional?
                 var v = timeDelta
                         .map(t -> (dist / 1000.) / (t / 3600000.)) // km/h
                         .orElse(0d);
-                velocitySeries.add(v);
-                if (dist > minMetersForMovement) {
-                    stats.timeMoving += timeDelta.orElse(0L);
-                }
+                velocitySeries.add(v); // or store the optional?
             }
             lastPoint = p;
         }
@@ -130,9 +120,9 @@ public class GpxStatisticsCalculator {
     /**
      * returns the milliseconds delta between the trackpoints (if both have a time)
      *
-     * @param a
-     * @param b
-     * @return optional(abs ( a.time - b.time)) or empty
+     * @param a point
+     * @param b point
+     * @return optional(abs ( a.time - b.time)) or empty if one of the times is missing
      */
     Optional<Long> timeDelta(Trkpt a, Trkpt b) {
         if (a.getTime().isPresent() && b.getTime().isPresent()) {
@@ -150,7 +140,7 @@ public class GpxStatisticsCalculator {
         return d;
     }
 
-    void computeMinMaxAvg() {
+    void computeStatsMinMaxAvg() {
         // elevation
         var elevStats = stats(elevationSeries);
         stats.heightMin = elevStats.getMin();
@@ -196,6 +186,17 @@ public class GpxStatisticsCalculator {
         return velocitySeries.toArray(new Double[0]);
     }
 
+    public Double[] getAscendArray() {
+        return ascentSeries.toArray(new Double[0]);
+    }
+
+    /**
+     * returns the running sum of the trip.
+     *
+     * Steps (distanceSeries) 1,1,1 -> 1,2,3
+     *
+     * @return array of running sum
+     */
     public Double[] getDistanceRunningSumArray() {
         var arr = distanceSeries.toArray(new Double[0]);
         for (int i = 1; i < arr.length; i++) {

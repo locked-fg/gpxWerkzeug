@@ -8,9 +8,7 @@ import org.xml.sax.SAXException;
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
-import java.util.Date;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,15 +21,14 @@ public class GpxStatisticsCalculatorTest {
     }
 
     @Test
-    void test_compute_simple() throws JAXBException, ParserConfigurationException, SAXException {
-        var f = getTestFile("sample_gpx_1.0.gpx");
+    void test_smoothSeries() throws JAXBException, ParserConfigurationException, SAXException {
+        var f = getTestFile("sample-garmin.gpx");
         var gpx = GpxParser.toGPX(f);
-        var calc = new GpxStatisticsCalculator();
+        var calc = new GpxStatisticsCalculator(gpx, 1, 1);
+        calc.smoothSeries(3);
 
-        calc.compute(gpx, 10);
-        assertEquals(4.36, calc.stats.length, 0.01);
-        calc.compute(gpx, 10);
-        assertEquals(4.36 * 2, calc.stats.length, 0.01);
+        var sum = calc.ascentSeries.stream().mapToDouble(Double::doubleValue).sum();
+        assertTrue(sum > 0);
     }
 
     @Test
@@ -39,14 +36,13 @@ public class GpxStatisticsCalculatorTest {
         var f = getTestFile("sample-garmin.gpx");
         var gpx = GpxParser.toGPX(f);
         var calc = new GpxStatisticsCalculator();
-        calc.computeTripDuration(gpx);
+        calc.computeStatsTimeTotal(gpx);
         assertEquals(5354000, calc.stats.timeTotal, "value was " + calc.stats.timeTotal);
     }
 
     @Test
     void test_compute_tripDuration_empty() {
-        var calc = new GpxStatisticsCalculator();
-        calc.computeTripDuration(new Gpx());
+        var calc = new GpxStatisticsCalculator(new Gpx(), 1, 1);
         assertEquals(0, calc.stats.timeTotal, "value was " + calc.stats.timeTotal);
     }
 
@@ -54,10 +50,11 @@ public class GpxStatisticsCalculatorTest {
     void test_compute_listsFilled() throws JAXBException, ParserConfigurationException, SAXException {
         var f = getTestFile("sample-garmin.gpx");
         var gpx = GpxParser.toGPX(f);
-        var calc = new GpxStatisticsCalculator();
-        calc.compute(gpx.trk.trkseg.get(0).trkpt, 10);
+        var calc = new GpxStatisticsCalculator(gpx, 1, 1);
+        calc.computeSeries(gpx.trk.trkseg.get(0).trkpt);
 
         assertFalse(calc.distanceSeries.isEmpty());
+        assertFalse(calc.timeSeries.isEmpty());
         assertFalse(calc.elevationSeries.isEmpty());
         assertFalse(calc.elevationDeltaSeries.isEmpty());
         assertFalse(calc.velocitySeries.isEmpty());
@@ -81,9 +78,8 @@ public class GpxStatisticsCalculatorTest {
     void test_computeMinMaxAvg_simpleTest() throws JAXBException, ParserConfigurationException, SAXException {
         var f = getTestFile("sample-garmin.gpx");
         var gpx = GpxParser.toGPX(f);
-        var calc = new GpxStatisticsCalculator();
-        calc.calc(gpx, 10);
-        calc.computeMinMaxAvg();
+        var calc = new GpxStatisticsCalculator(gpx, 10, 1);
+        calc.computeStatsMinMaxAvg();
 
         assertTrue(calc.stats.heightMin > 0);
         assertTrue(calc.stats.heightMax > 0);
