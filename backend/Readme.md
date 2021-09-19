@@ -1,23 +1,19 @@
-# Yet another GPX Toolbox
+# todo
 
-## Aims of the project:
-- easy handling of GPX data from my 'Garmin Dakota 20'
-- learn :-)
-- to be extended
+# run
 
-## Links
-- an elaborate GPX library: https://github.com/jenetics/jpx
-- GPX XML Schema: http://www.topografix.com/GPX/1/1/
+CLI Command:
+--gpxSrc="C://foo/gpx1/" --gpxSrc="C://bar/gpx2"
 
 ## interactive shell
+
 - build jar
 - ```jshell --class-path target\backend-0.0.1-SNAPSHOT.jar```
 - ```import de.locked.GpxWerkzeug.gpx.*; ```
 - ```
-File getTestFile(String filename) {
-    return new File(Objects.requireNonNull(
-            Gpx.class.getClassLoader().getResource(filename)).getFile()
-    );
-}
 
+File getTestFile(String filename) { return new File(Objects.requireNonNull(
+Gpx.class.getClassLoader().getResource(filename)).getFile()
+);
+}
 ```

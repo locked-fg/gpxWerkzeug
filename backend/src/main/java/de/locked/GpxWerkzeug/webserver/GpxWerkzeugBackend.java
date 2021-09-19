@@ -8,6 +8,7 @@ import de.locked.GpxWerkzeug.tools.GpxStatisticsCalculator;
 import de.locked.GpxWerkzeug.webserver.api.ChartData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
@@ -24,17 +25,13 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.*;
 
 import static java.util.stream.Collectors.toList;
-import static org.springframework.util.CollectionUtils.isEmpty;
 
 @SpringBootApplication
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
 public class GpxWerkzeugBackend implements ApplicationRunner {
-    // TODO move to some config
-    private List<String> gpxSrcDir = List.of(
-            "C://Users/info_000/Pictures/DigiCam Raw/",
-            "C://Users/info_000/Pictures/GPS/",
-            "Z://Onedrive-Backup-sync/unencrypted/DigiCam Raw/");
+    @Value("${gpxSrc}")
+    private List<String> gpxSrcDir = Collections.EMPTY_LIST;
     private static final int MIN_METERS_FOR_MOVEMENT = 10;
     private static final int KERNEL_SIZE = 3;
     private static final int MAX_DIST_METERS_BEFORE_SPLIT = 1000;
@@ -59,10 +56,6 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         LOG.info("init SpringBoot");
-        List<String> gpxSrc = args.getOptionValues("gpxSrc");
-        if (!isEmpty(gpxSrc)) {
-            gpxSrcDir = gpxSrc;
-        }
 //        LOG.trace("A TRACE Message");
 //        LOG.debug("A DEBUG Message");
 //        LOG.info("An INFO Message");
