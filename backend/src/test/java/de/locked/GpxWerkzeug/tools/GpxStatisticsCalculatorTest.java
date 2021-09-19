@@ -1,14 +1,13 @@
 package de.locked.GpxWerkzeug.tools;
 
 import de.locked.GpxWerkzeug.gpx.Gpx;
-import de.locked.GpxWerkzeug.gpx.Trkpt;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
-import java.util.*;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -25,10 +24,11 @@ public class GpxStatisticsCalculatorTest {
         var f = getTestFile("sample-garmin.gpx");
         var gpx = GpxParser.toGPX(f);
         var calc = new GpxStatisticsCalculator(gpx, 1, 1);
-        calc.smoothSeries(3);
+        var before = calc.ascentSeries.stream().mapToDouble(Double::doubleValue).summaryStatistics();
 
-        var sum = calc.ascentSeries.stream().mapToDouble(Double::doubleValue).sum();
-        assertTrue(sum > 0);
+        calc.smoothSeries(3);
+        var after = calc.ascentSeries.stream().mapToDouble(Double::doubleValue).summaryStatistics();
+        assertTrue(before.getAverage() != after.getAverage(), "stats before / after: " + before.getAverage() + "/" + after.getAverage());
     }
 
     @Test
@@ -51,7 +51,7 @@ public class GpxStatisticsCalculatorTest {
         var f = getTestFile("sample-garmin.gpx");
         var gpx = GpxParser.toGPX(f);
         var calc = new GpxStatisticsCalculator(gpx, 1, 1);
-        calc.computeSeries(gpx.trk.trkseg.get(0).trkpt);
+        // calc.computeSeries(gpx);
 
         assertFalse(calc.distanceSeries.isEmpty());
         assertFalse(calc.timeSeries.isEmpty());
@@ -61,18 +61,6 @@ public class GpxStatisticsCalculatorTest {
         assertFalse(calc.ascentSeries.isEmpty());
     }
 
-    @Test
-    void test_timedelta() {
-        var calc = new GpxStatisticsCalculator();
-        var a = new Trkpt(1d, 1d, 1d, new Date(0L));
-        var b = new Trkpt(1d, 1d, 1d, new Date(1000L));
-        var c = new Trkpt(1d, 1d, 1d, Optional.empty());
-        assertTrue(calc.timeDelta(a, b).isPresent());
-        assertTrue(calc.timeDelta(a, b).get() > 0);
-        assertEquals(0d, calc.timeDelta(a, a).get(), 0.01);
-        assertFalse(calc.timeDelta(a, c).isPresent());
-        assertFalse(calc.timeDelta(c, c).isPresent());
-    }
 
     @Test
     void test_computeMinMaxAvg_simpleTest() throws JAXBException, ParserConfigurationException, SAXException {
@@ -112,25 +100,5 @@ public class GpxStatisticsCalculatorTest {
         assertEquals(4d, dists[3], 0.0001);
     }
 
-    @Test
-    void test_ascent() {
-        var a = new Trkpt(47.756445, 11.5608, 0d, new Date(0));
-        var b = new Trkpt(47.756445, 11.56093378, 0d, new Date(0)); // d=10.00065m
-        var c = new Trkpt(47.756445, 11.56093378, 10d, new Date(0));
-        var d = new Trkpt(47.756445, 11.56093378, 6.66d, new Date(0));
-
-        var d_ab = GpxStatisticsCalculator.d(a, b); // d=10.00065m
-        var d_ac = GpxStatisticsCalculator.d(a, c); // d=14.14m
-        var d_bc = GpxStatisticsCalculator.d(b, c); // d=10m <- height
-
-        var a_ab = GpxStatisticsCalculator.ascent(a, b);
-        assertEquals(0, a_ab, .01);
-
-        var a_ac = GpxStatisticsCalculator.ascent(a, c);
-        assertEquals(100, a_ac, .01);
-
-        var a_ad = GpxStatisticsCalculator.ascent(a, d);
-        assertEquals(66.6, a_ad, .01);
-    }
 
 }

@@ -9,7 +9,7 @@ import java.util.stream.DoubleStream;
  * currently class to hold unused code that I moved from somewhere else
  * TODO rename!
  */
-public class Utils {
+public class KernelUtils {
 
     /**
      * initialize a evenly distributed kernel array
