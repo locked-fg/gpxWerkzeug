@@ -1,7 +1,10 @@
 package de.locked.GpxWerkzeug.webserver;
 
 import de.locked.GpxWerkzeug.gpx.Gpx;
-import de.locked.GpxWerkzeug.tools.*;
+import de.locked.GpxWerkzeug.tools.GpxCleaner;
+import de.locked.GpxWerkzeug.tools.GpxParser;
+import de.locked.GpxWerkzeug.tools.GpxStatistics;
+import de.locked.GpxWerkzeug.tools.GpxStatisticsCalculator;
 import de.locked.GpxWerkzeug.webserver.api.ChartData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,8 +34,7 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
     private List<String> gpxSrcDir = List.of(
             "C://Users/info_000/Pictures/DigiCam Raw/",
             "C://Users/info_000/Pictures/GPS/",
-            "F://info_000/Pictures/DigiCam Raw/",
-            "Z://Onedrive-Backup-sync/encrypted/DigiCam Raw/");
+            "Z://Onedrive-Backup-sync/unencrypted/DigiCam Raw/");
     private static final int MIN_METERS_FOR_MOVEMENT = 10;
     private static final int KERNEL_SIZE = 3;
     private static final int MAX_DIST_METERS_BEFORE_SPLIT = 1000;
@@ -72,7 +74,7 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
     private void loadPaths() throws IOException {
         LOG.info("Loading paths");
         var gpxPaths = GpxScanner.getGpxPaths(gpxSrcDir).collect(toList());
-        for (int i = 0; i < gpxPaths.size(); i++) {
+        for (int i = 0; i < gpxPaths.size(); i++) { // make <ID->GPX>-Tuples
             gpxDB.put(i, gpxPaths.get(i));
         }
     }
@@ -88,6 +90,7 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
     @GetMapping("/api/getTracklist")
     public List<TracklistTuple> getTracklist() {
         var tracklist = gpxDB.entrySet().stream()
+                .parallel()
                 .map(e -> new SimpleEntry<>(e.getKey(), getCleanedGpx(e.getValue())))
                 .filter(e -> e.getValue().isPresent())
                 .map(e -> {
