@@ -36,7 +36,7 @@ public class HgtReader {
     private final static int n = 3601;
 
     /**
-     * uncompresses a ziped hgt to a temporary HGT file which should get deleted after program exit
+     * uncompresses a zipped HGT to a temporary HGT file which should get deleted after program exit
      *
      * @param zipFile
      * @return
@@ -80,28 +80,6 @@ public class HgtReader {
                 }
             }
             return matrix;
-        }
-    }
-
-    private static int getIndex(double lat, double lon) { // lat = y
-        var y = lat % 1;
-        var x = lon % 1;
-        var iY = Math.round(n - (y * n));
-        var iX = Math.round(x * n);
-
-        var index = (iY * n) + iX;
-        return (int) index;
-    }
-
-    public static int getHeight(File hgt, double lat, double lon) throws IOException {
-        var index = getIndex(lat, lon);
-        int buffer = index * 2 * 8;
-        try (var bis = new BufferedInputStream(new FileInputStream(hgt), buffer)) {
-            bis.skip(index * 2); // *2 because 2 bytes per number
-            var ch1 = bis.read();
-            var ch2 = bis.read();
-            short height = (short) ((ch1 << 8) + (ch2));
-            return height;
         }
     }
 
