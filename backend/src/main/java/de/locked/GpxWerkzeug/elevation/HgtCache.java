@@ -41,7 +41,7 @@ public class HgtCache {
 
     /**
      * Retrieves the matrix from cache or loads it from disk -- IF the file is there!
-     * A HGTfFile NEED NOT exists!
+     * A HGT file NEED NOT exists!
      * <p>
      * As this can trigger a disc read I better synchronize this.
      * <p>
