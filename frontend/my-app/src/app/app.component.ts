@@ -184,6 +184,7 @@ export class AppComponent /*implements OnInit*/ { // TODO load tracks to List
     console.log('(re)load tracks');
     this.setLoadingAnimation(true);
     this.tracks = [];
+    this.shownTracks = [];
     this.http.get<TracklistTuple[]>(this.URL_GET_TRACKLIST).subscribe({
       next: (res) => res.forEach(t => {
         this.tracks.push(t);
