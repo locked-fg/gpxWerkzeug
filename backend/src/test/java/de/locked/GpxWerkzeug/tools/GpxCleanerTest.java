@@ -3,16 +3,11 @@ package de.locked.GpxWerkzeug.tools;
 import de.locked.GpxWerkzeug.gpx.Trkpt;
 import de.locked.GpxWerkzeug.gpx.Trkseg;
 import org.junit.jupiter.api.Test;
-import org.xml.sax.SAXException;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.parsers.ParserConfigurationException;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -31,19 +26,19 @@ class GpxCleanerTest {
             new Trkpt(47.747757, 11.565224, 0d, new Date(0))  // d=70
     ));
 
-    @Test
-    void test_heightOutlier() throws JAXBException, URISyntaxException, ParserConfigurationException, SAXException {
-        var url = getClass().getClassLoader().getResource("height_outlier.gpx").toURI();
-        var gpx = GpxParser.toGPX(url);
-        var before = gpx.trk.trkseg.get(0).trkpt.stream().map(Trkpt::getEle).collect(Collectors.toList());
-        // 10: 706.23, 11: 700.46, 12: 706.71
-        assertEquals(700.46, before.get(11), 0.001);
-
-        var cleaned = GpxCleaner.cleanElevationOutliers(gpx);
-        var after = cleaned.trk.trkseg.get(0).trkpt.stream().map(Trkpt::getEle).collect(Collectors.toList());
-        // 10: 706.23, 11: 706.47, 12: 706.71
-        assertEquals(706.47, after.get(11), 0.001);
-    }
+//    @Test
+//    void test_heightOutlier() throws JAXBException, URISyntaxException, ParserConfigurationException, SAXException {
+//        var url = getClass().getClassLoader().getResource("height_outlier.gpx").toURI();
+//        var gpx = GpxParser.toGPX(url);
+//        var before = gpx.trk.trkseg.get(0).trkpt.stream().map(Trkpt::getEle).collect(Collectors.toList());
+//        // 10: 706.23, 11: 700.46, 12: 706.71
+//        assertEquals(700.46, before.get(11), 0.001);
+//
+//        var cleaned = GpxCleaner.cleanElevationOutliers(gpx);
+//        var after = cleaned.trk.trkseg.get(0).trkpt.stream().map(Trkpt::getEle).collect(Collectors.toList());
+//        // 10: 706.23, 11: 706.47, 12: 706.71
+//        assertEquals(706.47, after.get(11), 0.001);
+//    }
 
     @Test
     void test_cleanPauses() {

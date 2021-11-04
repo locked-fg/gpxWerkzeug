@@ -3,7 +3,6 @@ package de.locked.GpxWerkzeug.tools;
 import de.locked.GpxWerkzeug.gpx.Gpx;
 import de.locked.GpxWerkzeug.gpx.Trkpt;
 import de.locked.GpxWerkzeug.gpx.Trkseg;
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -11,81 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static java.lang.Math.abs;
 import static java.util.stream.Collectors.toList;
 
 public class GpxCleaner {
     private final static Logger LOG = LogManager.getLogger(GpxCleaner.class);
     private final static Distance dist = new DistanceHaversine();
-
-    private final static double Z_THRESHOLD_ELEV = 2; // https://statisticsbyjim.com/basics/outliers/
-    private final static int MIN_METERS_MOVEMENT = 10;
-
-    public static Gpx cleanElevationOutliers(Gpx gpx) {
-        gpx.trk.trkseg = gpx.trk.trkseg.stream()
-                .map(trkSeg -> new Trkseg(cleanElevationOutliers(trkSeg.trkpt)))
-                .collect(toList());
-        return gpx;
-    }
-
-    /**
-     * Removes outliers in height. An outlier is replaced by the mean of the surrounding points
-     * TODO: Could/Should become obsolete as soon as height is adjusted by SRTM data
-     *
-     * @param in list of points
-     * @return list of points with (possibly) adjusted heights
-     */
-    @Deprecated
-    public static List<Trkpt> cleanElevationOutliers(final List<Trkpt> in) {
-        var elevs = cleanOutlier(in.stream().map(Trkpt::getEle).collect(toList()));
-        var out = new ArrayList<Trkpt>(in.size());
-        for (int i = 0; i < in.size(); i++) {
-            var p = in.get(i);
-            out.add(new Trkpt(p.getLat(), p.getLon(), elevs.get(i), p.getTime()));
-        }
-        return out;
-    }
-
-    @Deprecated
-    private static List<Double> cleanOutlier(final List<Double> input) {
-        final var deltas = toDelta(input);
-        final var stats = new SummaryStatistics();
-        for (Double v : deltas) {
-            stats.addValue(v);
-        }
-        final var sigma = stats.getStandardDeviation();
-        final var mu = stats.getMean();
-        final var out = new ArrayList<Double>(deltas.size());
-
-        for (int i = 0; i < deltas.size(); i++) {
-            var delta = deltas.get(i);
-            var z = (deltas.get(i) - mu) / sigma;
-            var value = input.get(i);
-            if (abs(z) > Z_THRESHOLD_ELEV) { // handle outlier
-                LOG.debug("outlier? i: {}, value:{}, delta: {}, z: {}", new Object[]{i, value, delta, z});
-                if (i == 0) {
-                    value = input.get(1); // TODO: quite ad Hoc
-                } else if (i == deltas.size() - 1) {
-                    value = input.get(deltas.size() - 2); // TODO: quite ad Hoc
-                } else {
-                    // correct the current value: take the mean between left and right
-                    // left is taken from the (possibly) corrected values, right from the source
-                    value = (out.get(i - 1) + input.get(i + 1)) / 2d;
-                }
-            }
-            out.add(value);
-        }
-        return out;
-    }
-
-    private static List<Double> toDelta(List<Double> in) {
-        var out = new ArrayList<Double>(in.size());
-        out.add(0d);
-        for (int i = 1; i < in.size(); i++) {
-            out.add(in.get(i) - in.get(i - 1));
-        }
-        return out;
-    }
 
     public static List<Trkseg> splitByDist(final Trkseg seg, final int maxDistMeters) {
         List<Trkpt> points = seg.getTrkpt();
