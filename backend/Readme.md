@@ -3,6 +3,8 @@
 # run
 
 CLI Command:
+https://www.baeldung.com/spring-boot-command-line-arguments
+
 --gpxSrc="C://foo/gpx1/" --gpxSrc="C://bar/gpx2"
 
 ## interactive shell
