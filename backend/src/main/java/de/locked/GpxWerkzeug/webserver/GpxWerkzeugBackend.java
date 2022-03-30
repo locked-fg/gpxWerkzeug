@@ -43,7 +43,8 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
     // the "DB"
     private HashMap<Integer, Path> gpxDB = new HashMap<>();
     // the cache
-    private final WeakHashMap<Path, Gpx> gpxCache = new WeakHashMap<>();
+    private final WeakHashMap<Path, Gpx> cleanGpxCache = new WeakHashMap<>();
+    private final WeakHashMap<Path, Gpx> uncleanGpxCache = new WeakHashMap<>();
     private HgtCache hgtCache;
 
     public static void main(String[] args) throws IOException {
@@ -91,7 +92,7 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
     public List<TracklistTuple> getTracklist() {
         var tracklist = gpxDB.entrySet().stream()
                 .parallel()
-                .map(e -> new SimpleEntry<>(e.getKey(), getCleanedGpx(e.getValue())))
+                .map(e -> new SimpleEntry<>(e.getKey(), getUncleanedGpx(e.getValue()))) // TODO this inits all HGT fixes!
                 .filter(e -> e.getValue().isPresent())
                 .map(e -> {
                     try {
@@ -150,7 +151,7 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
     }
 
     private Optional<Gpx> getCleanedGpx(Path p) {
-        var cached = gpxCache.get(p);
+        var cached = cleanGpxCache.get(p);
         if (cached != null) {
             LOG.info("no GPXCache entry for path {}", p);
             return Optional.of(cached);
@@ -160,7 +161,19 @@ public class GpxWerkzeugBackend implements ApplicationRunner {
                     .map(gpx -> GpxCleaner.splitByDist(gpx, MAX_DIST_METERS_BEFORE_SPLIT))
                     .map(gpx -> GpxFixHeightCleaner.fixHeight(gpx, hgtCache));
 
-            gpxOptional.ifPresent(v -> gpxCache.put(p, v));
+            gpxOptional.ifPresent(v -> cleanGpxCache.put(p, v));
+            return gpxOptional;
+        }
+    }
+
+    private Optional<Gpx> getUncleanedGpx(Path p) {
+        var cached = uncleanGpxCache.get(p);
+        if (cached != null) {
+            LOG.info("no GPXCache entry for path {}", p);
+            return Optional.of(cached);
+        } else {
+            var gpxOptional = GpxParser.toGPX(p);
+            gpxOptional.ifPresent(v -> uncleanGpxCache.put(p, v));
             return gpxOptional;
         }
     }
